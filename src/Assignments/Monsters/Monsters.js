@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBox from "./Components/SearchBox/SearchBox";
 import CardList from "./Components/CardList/CardList";
+import {Triangle} from "react-loader-spinner";
 import "./Monsters.scss";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
 /**********************************************************
   API 주소: https://jsonplaceholder.typicode.com/users
@@ -23,16 +25,55 @@ import "./Monsters.scss";
 function Monsters() {
   const [monsters, setMonsters] = useState([]);
   const [userInput, setUserInput] = useState("");
+  const [isLoader, setIsLoader] = useState(false);
+  const apiUri = "https://jsonplaceholder.typicode.com/users";
 
   // 데이터 로딩
 
+  useEffect(() => {
+    setIsLoader(true);    
+    try {
+      fetchData(apiUri);      
+    } catch(error) {
+      console.log(error);
+      setIsLoader(false);
+    }      
+  }, [])
+
+  async function fetchData(Uri) {
+    const response = await fetch(Uri, {method: 'GET'});
+
+    if (!response.ok) {
+      throw new Error("HTTP error! status: " + response.status);
+    }
+
+    const responData = await response.json();
+    console.log(responData);
+    setMonsters(responData);
+    setIsLoader(false);
+  }
+  
   // SearchBox 에 props로 넘겨줄 handleChange 메소드 정의
 
+  const updateInput = (e) => {
+    setUserInput(e.target.value);
+  }
+
+  const handleChange = monsters.filter((monster) => {
+    return monster.name.toLowerCase().includes(userInput.toLowerCase());
+  });    
+  
+  
   return (
     <div className="monsters">
+      {isLoader && 
+        <div className="loader">
+          <div><Triangle color="red" height="100" width="100" ariaLabel="Loading"/></div>
+        </div>
+      }
       <h1>컴포넌트 재사용 연습!</h1>
-      {/* <SearchBox handleChange=정의한메소드 /> */}
-      {/* <CardList monsters=몬스터리스트 /> */}
+      {<SearchBox handleChange={updateInput} /> }
+      {monsters && <CardList monsters={handleChange} />}
     </div>
   );
 }
